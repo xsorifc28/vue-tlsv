@@ -58,15 +58,30 @@ app.post('/validate', async (req, res) => {
 
             //send response
             if(req.body.json) {
-                res.send({
-                    isValid: true,
-                    file: {
-                        name: fesq.name,
-                        size: fesq.size,
-                        md5: fesq.md5
-                    },
-                    validation,
-                });
+                let jsonRes;
+                if(validation.error) {
+                    jsonRes = {
+                        valid: false,
+                        file: {
+                            name: fesq.name,
+                            size: fesq.size,
+                            md5: fesq.md5
+                        },
+                        error: validation.error
+                    }
+                } else {
+                    jsonRes = {
+                        valid: true,
+                        file: {
+                            name: fesq.name,
+                            size: fesq.size,
+                            md5: fesq.md5
+                        },
+                        validation,
+                    }
+                }
+
+                res.send(jsonRes);
             } else {
                 let resData;
                 if(validation.error) {
