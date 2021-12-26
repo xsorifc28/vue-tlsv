@@ -34,7 +34,7 @@ app.get('/', async (req, res) => {
        '      action=\'/validate\' \n' +
        '      method=\'post\' \n' +
        '      encType="multipart/form-data">\n' +
-       '        <input type="file" name="fesq" /><br><br>\n' +
+       '        <input type="file" name="fseq" /><br><br>\n' +
        '        <input type="checkbox" name="json" id="json" value="json" />\n' +
        '        <label for="json">JSON Response</label>\n' +
        '        <br><br><input type=\'submit\' value=\'Validate\' />\n' +
@@ -51,9 +51,9 @@ app.post('/validate', async (req, res) => {
                 message: 'No file uploaded'
             });
         } else {
-            //Use the name of the input field (i.e. "fesq") to retrieve the uploaded file
-            let fesq = req.files.fesq;
-            let d = new Uint8Array(fesq.data);
+            //Use the name of the input field (i.e. "fseq") to retrieve the uploaded file
+            let fseq = req.files.fseq;
+            let d = new Uint8Array(fseq.data);
             let validation = validator(d);
 
             //send response
@@ -63,9 +63,9 @@ app.post('/validate', async (req, res) => {
                     jsonRes = {
                         valid: false,
                         file: {
-                            name: fesq.name,
-                            size: fesq.size,
-                            md5: fesq.md5
+                            name: fseq.name,
+                            size: fseq.size,
+                            md5: fseq.md5
                         },
                         error: validation.error
                     }
@@ -73,9 +73,9 @@ app.post('/validate', async (req, res) => {
                     jsonRes = {
                         valid: true,
                         file: {
-                            name: fesq.name,
-                            size: fesq.size,
-                            md5: fesq.md5
+                            name: fseq.name,
+                            size: fseq.size,
+                            md5: fseq.md5
                         },
                         validation,
                     }
@@ -94,7 +94,7 @@ app.post('/validate', async (req, res) => {
 
                 let html = '<html lang="en">\n' +
                     '  <body>\n' +
-                    `${resData}`
+                    `${resData}` +
                 '  </body>\n' +
                 '</html>'
                 res.send(html);
