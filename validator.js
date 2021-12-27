@@ -1,12 +1,10 @@
 const struct = require('python-struct');
 
-const MEMORY_LIMIT = 681;
-
-const equals = (a, b) =>
-    a.length === b.length &&
-    a.every((v, i) => v === b[i]);
-
 module.exports = (data) => {
+    const MEMORY_LIMIT = 681;
+
+    const arraysEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
     if(!data) {
         return {
             error: 'Error - file is corrupt or has no data'
@@ -15,7 +13,7 @@ module.exports = (data) => {
 
     let magic = String.fromCharCode(...data.slice(0,4));
 
-    let [start, minor, major] = struct.unpack('<HBB', Buffer.from(data.slice(4, 8)));
+    let [ start, minor, major ] = struct.unpack('<HBB', Buffer.from(data.slice(4, 8)));
 
     let [ chCount, frameCount, stepTime ] = struct.unpack('<IIB', Buffer.from(data.slice(10, 19)));
 
@@ -47,44 +45,56 @@ module.exports = (data) => {
         }
     }
 
-    let prev_light = [];
-    let prev_ramp = [];
-    let prev_closure_1 = [];
-    let prev_closure_2 = [];
+    let prevLight = [];
+    let prevRamp = [];
+    let prevClosure1 = [];
+    let prevClosure2 = [];
     let count = 0;
     let pos = start;
 
-    for(let i = 0; i < frameCount; i++) {
-        validateFrame();
-        pos += 30 + 16 + 2;
-    }
+    const LIGHT_BUFFER_LEN = 30;
+    const CLOSURE_BUFFER_LEN = 16;
+    const GAP = 2;
 
-    function validateFrame() {
-        let lights = data.slice(pos, pos+30);
-        let closures = data.slice(pos + 30, pos + 30 + 16);
+    for(let i = 0; i < frameCount; i++) {
+        let lights = data.slice(pos, pos + LIGHT_BUFFER_LEN);
+        pos += LIGHT_BUFFER_LEN;
+
+        let closures = data.slice(pos, pos + CLOSURE_BUFFER_LEN);
+        pos += CLOSURE_BUFFER_LEN;
 
         let light_state = Array.from(lights.map(b => b > 127 ? 1 : 0));
         let ramp_state = Array.from(lights.slice(0, 14).map(b => Math.min(Math.floor(b > 127 ? 255 - b : b / 2), 3)));
         let closure_state = Array.from(closures.map(b => Math.floor(Math.floor(b / 32) + 1) / 2));
 
-        if(!equals(light_state, prev_light)) {
-            prev_light = light_state
-            count += 1
+        if(!arraysEqual(light_state, prevLight)) {
+            prevLight = light_state
+            count++
         }
 
-        if(!equals(ramp_state, prev_ramp)) {
-            prev_ramp = ramp_state
-            count += 1
+        if(!arraysEqual(ramp_state, prevRamp)) {
+            prevRamp = ramp_state
+            count++
         }
 
-        if(!equals(closure_state.slice(0, 10), prev_closure_1)) {
-            prev_closure_1 = closure_state.slice(0, 10)
-            count += 1
+        if(!arraysEqual(closure_state.slice(0, 10), prevClosure1)) {
+            prevClosure1 = closure_state.slice(0, 10)
+            count++
         }
 
-        if(!equals(closure_state.slice(10), prev_closure_2)) {
-            prev_closure_2 = closure_state.slice(10);
-            count += 1
+        if(!arraysEqual(closure_state.slice(10), prevClosure2)) {
+            prevClosure2 = closure_state.slice(10);
+            count++
+        }
+
+        pos += GAP;
+    }
+
+    const memoryUsage = count / MEMORY_LIMIT;
+
+    if(memoryUsage > 1) {
+        return {
+            error: `Sequence uses ${count} commands. The maximum allowed is ${MEMORY_LIMIT}`
         }
     }
 
@@ -92,6 +102,6 @@ module.exports = (data) => {
         frameCount,
         stepTime,
         durationSecs,
-        memoryUsage: ((count / MEMORY_LIMIT) * 100).toFixed(2)
+        memoryUsage
     }
 };

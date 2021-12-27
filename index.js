@@ -85,11 +85,12 @@ app.post('/validate', async (req, res) => {
             } else {
                 let resData;
                 if(validation.error) {
-                    resData = validation.error
+                    resData = 'VALIDATION ERROR: ' + validation.error
                 } else {
-                    let durationFormatted = new Date(validation.durationSecs * 1000).toISOString().substr(11, 12);
+                    const durationFormatted = new Date(validation.durationSecs * 1000).toISOString().substr(11, 12);
+                    const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2))
                     resData = `Found ${validation.frameCount} frames, step time of ${validation.stepTime} ms for a total duration of ${durationFormatted}.<br>\n` +
-                        `Used ${validation.memoryUsage}% of the available memory`;
+                        `Used ${memoryUsage}% of the available memory`;
                 }
 
                 let html = '<html lang="en">\n' +
