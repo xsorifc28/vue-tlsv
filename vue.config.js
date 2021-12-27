@@ -1,7 +1,7 @@
 module.exports = {
   configureWebpack: {
     entry: {
-      app: './frontend/main.js',
+      app: './src/main.js',
     },
   },
   lintOnSave: true,

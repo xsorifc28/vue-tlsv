@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/frontend/frontend.iml" filepath="$PROJECT_DIR$/frontend/frontend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/src/frontend.iml" filepath="$PROJECT_DIR$/src/frontend.iml" />
       <module fileurl="file://$PROJECT_DIR$/tesla-light-show-validator-node.iml" filepath="$PROJECT_DIR$/tesla-light-show-validator-node.iml" />
     </modules>
   </component>
