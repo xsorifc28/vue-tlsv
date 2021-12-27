@@ -1,15 +1,16 @@
 {
   "name": "tesla-light-show-validator",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "keywords": [],
+  "private": true,
   "author": "",
-  "license": "ISC",
   "scripts": {
-    "start": "node index.js",
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "start": "npm run build && node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "main": "index.js",
   "dependencies": {
     "body-parser": "^1.19.1",
     "cors": "^2.8.5",
@@ -19,7 +20,35 @@
     "morgan": "^1.10.0",
     "python-struct": "^1.1.3"
   },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "babel-eslint": "^10.1.0",
+    "core-js": "^3.6.5",
+    "eslint": "^6.7.2",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-vue": "^6.2.2",
+    "lint-staged": "^9.5.0",
+    "prettier": "^2.2.1",
+    "vue": "^2.6.11",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "_id": "tesla-light-show-validator@1.0.0",
   "engines": {
     "node": "16.x"
-  }
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "lint-staged": {
+    "*.{js,jsx,vue}": [
+      "vue-cli-service lint",
+      "git add"
+    ]
+  },
+  "readme": "ERROR: No README data found!"
 }
