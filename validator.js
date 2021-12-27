@@ -1,64 +1,48 @@
-const struct = require('python-struct');
-
 module.exports = (data) => {
   const MEMORY_LIMIT = 681;
 
-  const arraysEqual = (a, b) =>
-    a.length === b.length && a.every((v, i) => v === b[i]);
+  const arraysEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
 
-  if (!data) {
+  if(!data) {
     return {
-      error: 'Error - file is corrupt or has no data',
+      error: 'Error - file is corrupt or has no data'
     };
   }
 
-  let magic = String.fromCharCode(...data.slice(0, 4));
+  let magic = String.fromCharCode(...data.slice(0,4));
 
-  let [start, minor, major] = struct.unpack(
-    '<HBB',
-    Buffer.from(data.slice(4, 8))
-  );
+  let start = data.readUIntLE(4, 2);
+  let minor = data.readUIntLE(6, 1);
+  let major = data.readUIntLE(7, 1);
+  let chCount = data.readUIntLE(10, 4);
+  let frameCount = data.readUIntLE(14, 4);
+  let stepTime = data.readUIntLE(18, 1);
+  let compressionType = data.readUIntLE(20, 1);
 
-  let [chCount, frameCount, stepTime] = struct.unpack(
-    '<IIB',
-    Buffer.from(data.slice(10, 19))
-  );
-
-  let [compressionType] = struct.unpack('<B', Buffer.from(data.slice(20, 21)));
-
-  if (
-    magic !== 'PSEQ' ||
-    start < 24 ||
-    frameCount < 1 ||
-    stepTime < 15 ||
-    minor !== 0 ||
-    major !== 2
-  ) {
+  if (magic !== 'PSEQ' || start < 24 || frameCount < 1 || stepTime < 15 || minor !== 0 || major !== 2) {
     return {
-      error: 'Unknown file format, expected FSEQ v2.0',
+      error: 'Unknown file format, expected FSEQ v2.0'
     };
   }
 
   if (chCount !== 48) {
     return {
-      error: `Expected 48 channels, got ${chCount}`,
+      error: `Expected 48 channels, got ${chCount}`
     };
   }
 
   if (compressionType !== 0) {
     return {
-      error: 'Expected file format to be V2 Uncompressed',
-    };
+      error: 'Expected file format to be V2 Uncompressed'
+    }
   }
 
-  let durationSecs = (frameCount * stepTime) / 1000;
-  let durationFormatted = new Date(durationSecs * 1000)
-    .toISOString()
-    .substr(11, 12);
+  let durationSecs = (frameCount * stepTime / 1000);
+  let durationFormatted = new Date(durationSecs * 1000).toISOString().substr(11, 12);
   if (durationSecs > 5 * 60) {
     return {
-      error: `Expected total duration to be less than 5 minutes, got ${durationFormatted}`,
-    };
+      error: `Expected total duration to be less than 5 minutes, got ${durationFormatted}`
+    }
   }
 
   let prevLight = [];
@@ -72,41 +56,35 @@ module.exports = (data) => {
   const CLOSURE_BUFFER_LEN = 16;
   const GAP = 2;
 
-  for (let i = 0; i < frameCount; i++) {
+  for(let i = 0; i < frameCount; i++) {
     let lights = data.slice(pos, pos + LIGHT_BUFFER_LEN);
     pos += LIGHT_BUFFER_LEN;
 
     let closures = data.slice(pos, pos + CLOSURE_BUFFER_LEN);
     pos += CLOSURE_BUFFER_LEN;
 
-    let light_state = Array.from(lights.map((b) => (b > 127 ? 1 : 0)));
-    let ramp_state = Array.from(
-      lights
-        .slice(0, 14)
-        .map((b) => Math.min(Math.floor(b > 127 ? 255 - b : b / 2), 3))
-    );
-    let closure_state = Array.from(
-      closures.map((b) => Math.floor(Math.floor(b / 32) + 1) / 2)
-    );
+    let light_state = Array.from(lights.map(b => b > 127 ? 1 : 0));
+    let ramp_state = Array.from(lights.slice(0, 14).map(b => Math.min((Math.floor((b > 127 ? 255 - b : b) / 13) + 1) / 2, 3)));
+    let closure_state = Array.from(closures.map(b => Math.floor(Math.floor(b / 32) + 1) / 2));
 
-    if (!arraysEqual(light_state, prevLight)) {
-      prevLight = light_state;
-      count++;
+    if(!arraysEqual(light_state, prevLight)) {
+      prevLight = light_state
+      count++
     }
 
-    if (!arraysEqual(ramp_state, prevRamp)) {
-      prevRamp = ramp_state;
-      count++;
+    if(!arraysEqual(ramp_state, prevRamp)) {
+      prevRamp = ramp_state
+      count++
     }
 
-    if (!arraysEqual(closure_state.slice(0, 10), prevClosure1)) {
-      prevClosure1 = closure_state.slice(0, 10);
-      count++;
+    if(!arraysEqual(closure_state.slice(0, 10), prevClosure1)) {
+      prevClosure1 = closure_state.slice(0, 10)
+      count++
     }
 
-    if (!arraysEqual(closure_state.slice(10), prevClosure2)) {
+    if(!arraysEqual(closure_state.slice(10), prevClosure2)) {
       prevClosure2 = closure_state.slice(10);
-      count++;
+      count++
     }
 
     pos += GAP;
@@ -114,16 +92,16 @@ module.exports = (data) => {
 
   const memoryUsage = count / MEMORY_LIMIT;
 
-  if (memoryUsage > 1) {
+  if(memoryUsage > 1) {
     return {
-      error: `Sequence uses ${count} commands. The maximum allowed is ${MEMORY_LIMIT}`,
-    };
+      error: `Sequence uses ${count} commands. The maximum allowed is ${MEMORY_LIMIT}`
+    }
   }
 
   return {
     frameCount,
     stepTime,
     durationSecs,
-    memoryUsage,
-  };
-};
+    memoryUsage
+  }
+}
