@@ -1,6 +1,10 @@
-module.exports = (data) => {
+/**
+ *
+ * @param {{ArrayBuffer}} data
+ * @returns {{error: string}|{frameCount: number, memoryUsage: number, durationSecs: number, stepTime: number}}
+ */
+export default (data) => {
   const MEMORY_LIMIT = 681;
-
   const arraysEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
 
   if(!data) {
@@ -9,15 +13,14 @@ module.exports = (data) => {
     };
   }
 
-  let magic = String.fromCharCode(...data.slice(0,4));
-
-  let start = data.readUIntLE(4, 2);
-  let minor = data.readUIntLE(6, 1);
-  let major = data.readUIntLE(7, 1);
-  let chCount = data.readUIntLE(10, 4);
-  let frameCount = data.readUIntLE(14, 4);
-  let stepTime = data.readUIntLE(18, 1);
-  let compressionType = data.readUIntLE(20, 1);
+  let magic = String.fromCharCode(...new Uint8Array(data.slice(0,4)));
+  let start = new DataView(data.slice(4, 6)).getUint8(0);
+  let minor = new DataView(data.slice(6, 7)).getUint8(0);
+  let major = new DataView(data.slice(7, 8)).getUint8(0);
+  let chCount = new DataView(data.slice(10, 14)).getUint32(0, true);
+  let frameCount = new DataView(data.slice(14, 18)).getUint32(0, true);
+  let stepTime = new DataView(data.slice(18, 19)).getUint8(0);
+  let compressionType = new DataView(data.slice(20, 21)).getUint8(0);
 
   if (magic !== 'PSEQ' || start < 24 || frameCount < 1 || stepTime < 15 || minor !== 0 || major !== 2) {
     return {
@@ -57,10 +60,10 @@ module.exports = (data) => {
   const GAP = 2;
 
   for(let i = 0; i < frameCount; i++) {
-    let lights = data.slice(pos, pos + LIGHT_BUFFER_LEN);
+    let lights = new Uint8Array(data.slice(pos, pos + LIGHT_BUFFER_LEN));
     pos += LIGHT_BUFFER_LEN;
 
-    let closures = data.slice(pos, pos + CLOSURE_BUFFER_LEN);
+    let closures = new Uint8Array(data.slice(pos, pos + CLOSURE_BUFFER_LEN));
     pos += CLOSURE_BUFFER_LEN;
 
     let light_state = Array.from(lights.map(b => b > 127 ? 1 : 0));

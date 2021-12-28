@@ -38,19 +38,19 @@
     </v-app-bar>
 
     <v-main>
-      <HelloWorld/>
+      <Validator/>
     </v-main>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld';
+import Validator from './components/Validator';
 
 export default {
   name: 'App',
 
   components: {
-    HelloWorld,
+    Validator,
   },
 
   data: () => ({

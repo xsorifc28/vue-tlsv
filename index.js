@@ -3,7 +3,7 @@ const fileUpload = require('express-fileupload');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
-const validator = require('./validator');
+const validator = require('@/utils/validator');
 
 const app = express();
 
