@@ -95,7 +95,8 @@ export default (data) => {
   const memoryUsage = commandCount / MEMORY_LIMIT;
 
   if(memoryUsage > 1) {
-    error = `Sequence uses ${commandCount} commands. The maximum allowed is ${MEMORY_LIMIT}!`
+    const memoryUsageFormatted = parseFloat((memoryUsage * 100).toFixed(2))
+    error = `Used ${memoryUsageFormatted}% of available memory! Sequence uses ${commandCount} commands, but the maximum allowed is ${MEMORY_LIMIT}!`
   }
 
   return {

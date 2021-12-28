@@ -102,7 +102,7 @@ export default {
       this.durationAlertMessage = `Found ${validation.frameCount} frames, step time of ${validation.stepTime} ms for a total duration of ${durationFormatted}`;
 
       this.memoryAlertType = 'success';
-      this.memoryAlertMessage = `Used ${memoryUsage}% of the available memory`;
+      this.memoryAlertMessage = `Used ${memoryUsage}% of the available memory (using ${validation.commandCount} out of 681 allowed commands)`;
 
       if(this.fileName !== 'lightshow.fseq') {
         this.fileNameAlertType = 'warning';
