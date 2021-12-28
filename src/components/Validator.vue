@@ -34,26 +34,22 @@
             <v-container>
               <v-row>
                 <v-col cols="8" offset="2" class="drop" align-self="center">
-                  <div class="text-subtitle-1">
-                    Validating file...
-                  </div>
-                  <br />
                   <div>
                     <br />
-                    <v-progress-circular
-                        :size="50"
-                        color="secondary"
-                        indeterminate
-                        v-show="processingDfu"
-                    ></v-progress-circular>
-
-                    <v-alert v-show="hasFile && !processingFile" outlined :type="alertType">{{ validationMessage }}</v-alert>
+                    <v-progress-circular :size="50" color="secondary" indeterminate v-show="processingFile"></v-progress-circular>
+                    <v-alert :type="overallAlertType">{{ overallAlertMessage }}</v-alert>
+                    <v-alert v-show="hasFile && !processingFile" outlined :type="fileNameAlertType">{{ fileNameAlertMessage }}</v-alert>
+                    <v-alert v-show="hasFile && !processingFile" outlined :type="durationAlertType">{{ durationAlertMessage }}</v-alert>
+                    <v-alert v-show="hasFile && !processingFile" outlined :type="memoryAlertType">{{ memoryAlertMessage }}</v-alert>
                   </div>
+                  <v-btn text @click="resetStepper"> Start Over </v-btn>
                 </v-col>
               </v-row>
             </v-container>
           </v-stepper-content>
         </v-stepper>
+        <br>
+        By selecting a file, you are agreeing to the <Disclaimer />.
       </v-container>
     </v-main>
   </v-app>
@@ -62,19 +58,25 @@
 <script>
 
 import fseqValidator from '../utils/validator';
+import Disclaimer from '@/components/Disclaimer';
 
 export default {
   name: 'Validator',
+  components: {Disclaimer},
   data() {
     return {
       fileName: null,
-      fileValid: false,
-      processingFile: false,
       hasFile: false,
       stepperStep: 1,
-      processingDfu: false,
-      alertType: 'success'
-
+      processingFile: false,
+      overallAlertType: 'success',
+      overallAlertMessage: '',
+      fileNameAlertType: 'success',
+      fileNameAlertMessage: '',
+      memoryAlertType: 'success',
+      memoryAlertMessage: '',
+      durationAlertType: 'success',
+      durationAlertMessage: '',
     };
   },
   methods: {
@@ -82,30 +84,53 @@ export default {
       let file = event.target.files[0];
       if (!file) {
         // File select canceled
-        this.processingFile = false;
         this.hasFile = false;
-        this.fileValid = false;
         return;
       }
-      this.processingFile = true;
-      this.fileValid = false;
+
       this.hasFile = true;
       this.fileName = file.name;
-      if(this.fileName !== 'lightshow.fseq') {
-        console.error('Filename should be lightshow.fseq')
-      }
       this.stepperStep = 2;
-      this.processingDfu = true;
+      this.processingFile = true;
+
       let validation = await this.validate(file);
-      this.processingFile = false;
-      console.log(validation);
+
+      let durationFormatted = new Date(validation.durationSecs * 1000).toISOString().substr(11, 12);
+      const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2))
+
+      this.durationAlertType = 'success';
+      this.durationAlertMessage = `Found ${validation.frameCount} frames, step time of ${validation.stepTime} ms for a total duration of ${durationFormatted}`;
+
+      this.memoryAlertType = 'success';
+      this.memoryAlertMessage = `Used ${memoryUsage}% of the available memory`;
+
+      if(this.fileName !== 'lightshow.fseq') {
+        this.fileNameAlertType = 'warning';
+        this.fileNameAlertMessage = 'Filename should be \'lightshow.fseq\'';
+      } else {
+        this.fileNameAlertType = 'success';
+        this.fileNameAlertMessage = 'Filename is lightshow.fseq';
+      }
 
       if(validation.error) {
-        this.validationMessage = validation.error;
-        console.error(validation.error);
-        this.alertType = 'error';
+        this.overallAlertType = 'error';
+        this.overallAlertMessage = 'Light Show is invalid';
+
+        if(validation.memoryUsage > 1) {
+          this.memoryAlertType = 'error';
+          this.memoryAlertMessage = validation.error;
+        }
+
+        if(validation.durationSecs > 5 * 60) {
+          this.durationAlertType = 'error';
+          this.durationAlertMessage = validation.error;
+        }
+      } else {
+        this.overallAlertType = 'success';
+        this.overallAlertMessage = 'Light Show is Valid';
       }
-      this.processingDfu = false;
+
+      this.processingFile = false;
     },
 
     async validate(file) {
@@ -123,6 +148,9 @@ export default {
 
         reader.readAsArrayBuffer(file);
       });
+    },
+    resetStepper() {
+      this.stepperStep = 1;
     },
   },
 };
