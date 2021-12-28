@@ -1,5 +1,5 @@
 /**
- *
+ * Validates a FSEQ file per specs defined at https://github.com/teslamotors/light-show
  * @param {{ArrayBuffer}} data
  * @returns {{error: string}|{frameCount: number, memoryUsage: number, durationSecs: number, stepTime: number}}
  */
@@ -13,14 +13,19 @@ export default (data) => {
     };
   }
 
+  let error;
+
   let magic = String.fromCharCode(...new Uint8Array(data.slice(0,4)));
-  let start = new DataView(data.slice(4, 6)).getUint8(0);
-  let minor = new DataView(data.slice(6, 7)).getUint8(0);
-  let major = new DataView(data.slice(7, 8)).getUint8(0);
-  let chCount = new DataView(data.slice(10, 14)).getUint32(0, true);
-  let frameCount = new DataView(data.slice(14, 18)).getUint32(0, true);
-  let stepTime = new DataView(data.slice(18, 19)).getUint8(0);
-  let compressionType = new DataView(data.slice(20, 21)).getUint8(0);
+
+  let header = new DataView(data.slice(0, 22));
+
+  let start = header.getUint8(4);
+  let minor = header.getUint8(6);
+  let major = header.getUint8(7);
+  let chCount = header.getUint32(10, true);
+  let frameCount = header.getUint32(14, true);
+  let stepTime = header.getUint8(18);
+  let compressionType = header.getUint8(20);
 
   if (magic !== 'PSEQ' || start < 24 || frameCount < 1 || stepTime < 15 || minor !== 0 || major !== 2) {
     return {
@@ -29,30 +34,24 @@ export default (data) => {
   }
 
   if (chCount !== 48) {
-    return {
-      error: `Expected 48 channels, got ${chCount}`
-    };
+    error = `Expected 48 channels, got ${chCount}`
   }
 
   if (compressionType !== 0) {
-    return {
-      error: 'Expected file format to be V2 Uncompressed'
-    }
+    error = 'Expected file format to be V2 Uncompressed';
   }
 
   let durationSecs = (frameCount * stepTime / 1000);
   let durationFormatted = new Date(durationSecs * 1000).toISOString().substr(11, 12);
   if (durationSecs > 5 * 60) {
-    return {
-      error: `Expected total duration to be less than 5 minutes, got ${durationFormatted}`
-    }
+    error = `Expected total duration to be less than 5 minutes, got ${durationFormatted}`
   }
 
   let prevLight = [];
   let prevRamp = [];
   let prevClosure1 = [];
   let prevClosure2 = [];
-  let count = 0;
+  let commandCount = 0;
   let pos = start;
 
   const LIGHT_BUFFER_LEN = 30;
@@ -72,39 +71,39 @@ export default (data) => {
 
     if(!arraysEqual(light_state, prevLight)) {
       prevLight = light_state
-      count++
+      commandCount++
     }
 
     if(!arraysEqual(ramp_state, prevRamp)) {
       prevRamp = ramp_state
-      count++
+      commandCount++
     }
 
     if(!arraysEqual(closure_state.slice(0, 10), prevClosure1)) {
       prevClosure1 = closure_state.slice(0, 10)
-      count++
+      commandCount++
     }
 
     if(!arraysEqual(closure_state.slice(10), prevClosure2)) {
       prevClosure2 = closure_state.slice(10);
-      count++
+      commandCount++
     }
 
     pos += GAP;
   }
 
-  const memoryUsage = count / MEMORY_LIMIT;
+  const memoryUsage = commandCount / MEMORY_LIMIT;
 
   if(memoryUsage > 1) {
-    return {
-      error: `Sequence uses ${count} commands. The maximum allowed is ${MEMORY_LIMIT}`
-    }
+    error = `Sequence uses ${commandCount} commands. The maximum allowed is ${MEMORY_LIMIT}!`
   }
 
   return {
     frameCount,
     stepTime,
     durationSecs,
-    memoryUsage
+    memoryUsage,
+    commandCount,
+    error,
   }
 }
