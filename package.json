@@ -8,10 +8,10 @@
     "build": "vue-cli-service build",
     "build-report": "npm run build -- --report",
     "lint": "vue-cli-service lint",
-    "start": "node index.js",
+    "start": "node express.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "main": "index.js",
+  "main": "express.js",
   "dependencies": {
     "compression": "^1.7.4",
     "express": "^4.17.2"
