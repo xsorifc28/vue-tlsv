@@ -6,7 +6,7 @@
       dark
     >
       <div class="d-flex align-center">
-        Light Show Validator
+        Light Show Validator for Tesla Vehicles
       </div>
 
       <v-spacer></v-spacer>
