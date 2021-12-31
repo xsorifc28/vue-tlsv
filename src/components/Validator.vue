@@ -50,6 +50,8 @@
         </v-stepper>
         <br>
         By selecting a file, you are agreeing to the <Disclaimer />.
+        <br>
+        This website and its contents are not affiliated with or endorsed by Tesla Inc.
       </v-container>
     </v-main>
   </v-app>
