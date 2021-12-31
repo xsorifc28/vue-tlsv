@@ -57,7 +57,7 @@
 
 <script>
 
-import fseqValidator from '../utils/validator';
+import { Validator } from '@xsor/tlsv';
 import Disclaimer from '@/components/Disclaimer';
 
 export default {
@@ -137,7 +137,7 @@ export default {
       return new Promise(resolve => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          resolve(fseqValidator(e.target.result));
+          resolve(Validator(e.target.result));
         };
 
         reader.onerror = function(e) {
