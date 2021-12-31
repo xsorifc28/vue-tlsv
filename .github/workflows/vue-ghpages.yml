@@ -11,4 +11,5 @@ jobs:
         with:
           username: 'xsorifc28'
           reponame: 'vue-tlsv'
+          cname: 'validator.t2k.dev'
           token: ${{ secrets.GITHUB_TOKEN }} # Leave this line unchanged
