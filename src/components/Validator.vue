@@ -63,6 +63,13 @@
 import { Validator } from '@xsor/tlsv';
 import Disclaimer from '@/components/Disclaimer';
 
+// Those mappings must be the same as defined in the '@xsor/tlsv' module.
+const FileFormat = 1
+const ChannelCount = 2
+const FseqType = 3
+const Duration = 4
+const Memory = 5
+
 export default {
   name: 'Validator',
   components: {Disclaimer},
@@ -120,8 +127,8 @@ export default {
 
       let anyErrorExists = false;
 
-      if (resultsKeys.includes('4')) {
-        let durationResults = validation.results[4];
+      if (resultsKeys.includes(Duration.toString())) {
+        let durationResults = validation.results[Duration];
         if (durationResults.isValid) {
           let durationFormatted = new Date(validation.duration * 1000).toISOString().substr(11, 12);
           this.durationAlertType = 'success';
@@ -133,8 +140,8 @@ export default {
         }
       }
 
-      if (resultsKeys.includes('5')) {
-        let memoryResults = validation.results[5];
+      if (resultsKeys.includes(Memory.toString())) {
+        let memoryResults = validation.results[Memory];
         if (memoryResults.isValid) {
           const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2));
           this.memoryAlertType = 'success';
@@ -147,7 +154,7 @@ export default {
       }
 
       resultsKeys.forEach(function(key) {
-        if (['1', '2', '3'].includes(key)) {
+        if ([FileFormat.toString(), ChannelCount.toString(), FseqType.toString()].includes(key)) {
           let value = validation.results[key];
           console.log(value)
           if (!value.isValid) {
