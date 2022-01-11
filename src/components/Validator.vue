@@ -38,10 +38,18 @@
                     <br />
                     <v-progress-circular :size="50" color="secondary" indeterminate v-show="processingFile"></v-progress-circular>
                     <v-alert :type="overallAlertType">{{ overallAlertMessage }}</v-alert>
-                    <v-alert v-show="hasFile && !processingFile && fileNameAlertMessage" outlined :type="fileNameAlertType">{{ fileNameAlertMessage }}</v-alert>
-                    <v-alert v-show="hasFile && !processingFile && durationAlertMessage" outlined :type="durationAlertType">{{ durationAlertMessage }}</v-alert>
-                    <v-alert v-show="hasFile && !processingFile && memoryAlertMessage" outlined :type="memoryAlertType">{{ memoryAlertMessage }}</v-alert>
-                    <v-alert v-show="hasFile && !processingFile && otherErrorAlertMessage" outlined :type="otherErrorAlertType">{{ otherErrorAlertMessage }}</v-alert>
+
+                    <div v-for="warning in warningMessages" :key="warning">
+                      <v-alert type="warning" outlined>{{ warning }}</v-alert>
+                    </div>
+
+                    <div v-for="error in errorMessages" :key="error">
+                      <v-alert type="error" outlined>{{ error }}</v-alert>
+                    </div>
+
+                    <div v-for="success in successMessages" :key="success">
+                      <v-alert type="success" outlined>{{ success }}</v-alert>
+                    </div>
                   </div>
                   <v-btn text @click="resetStepper"> Start Over </v-btn>
                 </v-col>
@@ -60,15 +68,8 @@
 
 <script>
 
-import { Validator } from '@xsor/tlsv';
+import { Validator, ErrorType, buildErrorMessages } from '@xsor/tlsv';
 import Disclaimer from '@/components/Disclaimer';
-
-// Those mappings must be the same as defined in the '@xsor/tlsv' module.
-const FileFormat = 1
-const ChannelCount = 2
-const FseqType = 3
-const Duration = 4
-const Memory = 5
 
 export default {
   name: 'Validator',
@@ -79,16 +80,12 @@ export default {
       hasFile: false,
       stepperStep: 1,
       processingFile: false,
+
       overallAlertType: 'success',
       overallAlertMessage: '',
-      fileNameAlertType: 'success',
-      fileNameAlertMessage: '',
-      memoryAlertType: 'success',
-      memoryAlertMessage: '',
-      durationAlertType: 'success',
-      durationAlertMessage: '',
-      otherErrorAlertType: 'success',
-      otherErrorAlertMessage: '',
+      successMessages: [],
+      warningMessages: [],
+      errorMessages: [],
     };
   },
   methods: {
@@ -105,67 +102,31 @@ export default {
       this.stepperStep = 2;
       this.processingFile = true;
 
-      // Reset values to defaults. This needs to be done because subsequent file uploads wouldn't always overwrite these values,
-      // and this could lead to the website displaying error messages from previous analyzations.
-      this.durationAlertType = 'success'
-      this.durationAlertMessage = ''
-      this.memoryAlertMessage = 'success'
-      this.memoryAlertMessage = ''
-      this.otherErrorAlertType = 'success';
-      this.otherErrorAlertMessage = '';
+      // Reset
+      this.successMessages = []
+      this.warningMessages = []
+      this.errorMessages = []
 
       let validation = await this.validate(file);
-      let resultsKeys = Object.keys(validation.results);
+      this.errorMessages = buildErrorMessages(validation);
 
       if(this.fileName !== 'lightshow.fseq') {
-        this.fileNameAlertType = 'warning';
-        this.fileNameAlertMessage = 'Filename should be \'lightshow.fseq\'';
+        this.warningMessages.push('Filename should be \'lightshow.fseq\'');
       } else {
-        this.fileNameAlertType = 'success';
-        this.fileNameAlertMessage = 'Filename is lightshow.fseq';
+        this.successMessages.push('Filename is lightshow.fseq');
       }
 
-      let anyErrorExists = false;
-
-      if (resultsKeys.includes(Duration.toString())) {
-        let durationResults = validation.results[Duration];
-        if (durationResults.isValid) {
-          let durationFormatted = new Date(validation.duration * 1000).toISOString().substr(11, 12);
-          this.durationAlertType = 'success';
-          this.durationAlertMessage = `Found ${validation.frameCount} frames, step time of ${validation.stepTime} ms for a total duration of ${durationFormatted}`;
-        } else {
-          this.durationAlertType = 'error';
-          this.durationAlertMessage = durationResults.message;
-          anyErrorExists = true;
-        }
+      if (!validation.errors.includes(ErrorType.Duration)) {
+        let durationFormatted = new Date(validation.duration * 1000).toISOString().substr(11, 12);
+        this.successMessages.push(`Found ${validation.frameCount} frames, step time of ${validation.stepTime} ms for a total duration of ${durationFormatted}`);
       }
 
-      if (resultsKeys.includes(Memory.toString())) {
-        let memoryResults = validation.results[Memory];
-        if (memoryResults.isValid) {
-          const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2));
-          this.memoryAlertType = 'success';
-          this.memoryAlertMessage = `Used ${memoryUsage}% of the available memory (using ${validation.commandCount} out of 681 allowed commands)`;
-        } else {
-          this.memoryAlertType = 'error';
-          this.memoryAlertMessage = memoryResults.message;
-          anyErrorExists = true;
-        }
+      if (!validation.errors.includes(ErrorType.Memory)) {
+        const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2));
+        this.successMessages.push(`Used ${memoryUsage}% of the available memory (using ${validation.commandCount} out of 681 allowed commands)`);
       }
 
-      resultsKeys.forEach(function(key) {
-        if ([FileFormat.toString(), ChannelCount.toString(), FseqType.toString()].includes(key)) {
-          let value = validation.results[key];
-          console.log(value)
-          if (!value.isValid) {
-            this.otherErrorAlertType = 'error';
-            this.otherErrorAlertMessage = value.message;
-            anyErrorExists = true
-          }
-        }
-      }, this)
-
-      if (anyErrorExists) {
+      if (validation.errors > 0) {
         this.overallAlertType = 'error';
         this.overallAlertMessage = 'Light Show is invalid';
       } else {
