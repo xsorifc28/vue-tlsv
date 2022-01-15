@@ -38,9 +38,18 @@
                     <br />
                     <v-progress-circular :size="50" color="secondary" indeterminate v-show="processingFile"></v-progress-circular>
                     <v-alert :type="overallAlertType">{{ overallAlertMessage }}</v-alert>
-                    <v-alert v-show="hasFile && !processingFile" outlined :type="fileNameAlertType">{{ fileNameAlertMessage }}</v-alert>
-                    <v-alert v-show="hasFile && !processingFile" outlined :type="durationAlertType">{{ durationAlertMessage }}</v-alert>
-                    <v-alert v-show="hasFile && !processingFile" outlined :type="memoryAlertType">{{ memoryAlertMessage }}</v-alert>
+
+                    <div v-for="warning in warningMessages" :key="warning">
+                      <v-alert type="warning" outlined>{{ warning }}</v-alert>
+                    </div>
+
+                    <div v-for="error in errorMessages" :key="error">
+                      <v-alert type="error" outlined>{{ error }}</v-alert>
+                    </div>
+
+                    <div v-for="success in successMessages" :key="success">
+                      <v-alert type="success" outlined>{{ success }}</v-alert>
+                    </div>
                   </div>
                   <v-btn text @click="resetStepper"> Start Over </v-btn>
                 </v-col>
@@ -59,7 +68,7 @@
 
 <script>
 
-import { Validator } from '@xsor/tlsv';
+import { Validator, ErrorType, buildErrorMessages } from '@xsor/tlsv';
 import Disclaimer from '@/components/Disclaimer';
 
 export default {
@@ -71,14 +80,12 @@ export default {
       hasFile: false,
       stepperStep: 1,
       processingFile: false,
+
       overallAlertType: 'success',
       overallAlertMessage: '',
-      fileNameAlertType: 'success',
-      fileNameAlertMessage: '',
-      memoryAlertType: 'success',
-      memoryAlertMessage: '',
-      durationAlertType: 'success',
-      durationAlertMessage: '',
+      successMessages: [],
+      warningMessages: [],
+      errorMessages: [],
     };
   },
   methods: {
@@ -95,38 +102,33 @@ export default {
       this.stepperStep = 2;
       this.processingFile = true;
 
+      // Reset
+      this.successMessages = []
+      this.warningMessages = []
+      this.errorMessages = []
+
       let validation = await this.validate(file);
-
-      let durationFormatted = new Date(validation.durationSecs * 1000).toISOString().substr(11, 12);
-      const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2))
-
-      this.durationAlertType = 'success';
-      this.durationAlertMessage = `Found ${validation.frameCount} frames, step time of ${validation.stepTime} ms for a total duration of ${durationFormatted}`;
-
-      this.memoryAlertType = 'success';
-      this.memoryAlertMessage = `Used ${memoryUsage}% of the available memory (using ${validation.commandCount} out of 681 allowed commands)`;
+      this.errorMessages = buildErrorMessages(validation);
 
       if(this.fileName !== 'lightshow.fseq') {
-        this.fileNameAlertType = 'warning';
-        this.fileNameAlertMessage = 'Filename should be \'lightshow.fseq\'';
+        this.warningMessages.push('Filename should be \'lightshow.fseq\'');
       } else {
-        this.fileNameAlertType = 'success';
-        this.fileNameAlertMessage = 'Filename is lightshow.fseq';
+        this.successMessages.push('Filename is lightshow.fseq');
       }
 
-      if(validation.error) {
+      if (!validation.errors.includes(ErrorType.Duration)) {
+        let durationFormatted = new Date(validation.duration * 1000).toISOString().substr(11, 12);
+        this.successMessages.push(`Found ${validation.frameCount} frames, step time of ${validation.stepTime} ms for a total duration of ${durationFormatted}`);
+      }
+
+      if (!validation.errors.includes(ErrorType.Memory)) {
+        const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2));
+        this.successMessages.push(`Used ${memoryUsage}% of the available memory (using ${validation.commandCount} out of 681 allowed commands)`);
+      }
+
+      if (validation.errors > 0) {
         this.overallAlertType = 'error';
         this.overallAlertMessage = 'Light Show is invalid';
-
-        if(validation.memoryUsage > 1) {
-          this.memoryAlertType = 'error';
-          this.memoryAlertMessage = validation.error;
-        }
-
-        if(validation.durationSecs > 5 * 60) {
-          this.durationAlertType = 'error';
-          this.durationAlertMessage = validation.error;
-        }
       } else {
         this.overallAlertType = 'success';
         this.overallAlertMessage = 'Light Show is Valid';
