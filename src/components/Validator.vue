@@ -117,7 +117,7 @@ export default {
       }
 
       if (!validation.errors.includes(ErrorType.Duration)) {
-        let durationFormatted = new Date(validation.duration * 1000).toISOString().substr(11, 12);
+        let durationFormatted = new Date(validation.duration).toISOString().substr(11, 12);
         this.successMessages.push(`Found ${validation.frameCount} frames, step time of ${validation.stepTime} ms for a total duration of ${durationFormatted}`);
       }
 
