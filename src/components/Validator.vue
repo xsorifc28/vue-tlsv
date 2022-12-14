@@ -123,7 +123,7 @@ export default {
 
       if (!validation.errors.includes(ErrorType.Memory)) {
         const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2));
-        this.successMessages.push(`Used ${memoryUsage}% of the available memory (using ${validation.commandCount} out of 681 allowed commands)`);
+        this.successMessages.push(`Used ${memoryUsage}% of the available memory (using ${validation.commandCount} out of 3500 allowed commands)`);
       }
 
       if (validation.errors > 0) {

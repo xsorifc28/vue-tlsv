@@ -1,6 +1,6 @@
 {
   "name": "vue-tlsv",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "author": "",
   "scripts": {
@@ -12,7 +12,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@xsor/tlsv": "0.2.1"
+    "@xsor/tlsv": "0.3.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
