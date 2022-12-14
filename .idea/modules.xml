@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/src/frontend.iml" filepath="$PROJECT_DIR$/src/frontend.iml" />
-      <module fileurl="file://$PROJECT_DIR$/tesla-light-show-validator-node.iml" filepath="$PROJECT_DIR$/tesla-light-show-validator-node.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vue-tlsv.iml" filepath="$PROJECT_DIR$/vue-tlsv.iml" />
     </modules>
   </component>
 </project>
