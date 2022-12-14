@@ -39,16 +39,16 @@
                     <v-progress-circular :size="50" color="secondary" indeterminate v-show="processingFile"></v-progress-circular>
                     <v-alert :type="overallAlertType">{{ overallAlertMessage }}</v-alert>
 
+                    <div v-for="success in successMessages" :key="success">
+                      <v-alert type="success" outlined>{{ success }}</v-alert>
+                    </div>
+
                     <div v-for="warning in warningMessages" :key="warning">
                       <v-alert type="warning" outlined>{{ warning }}</v-alert>
                     </div>
 
                     <div v-for="error in errorMessages" :key="error">
                       <v-alert type="error" outlined>{{ error }}</v-alert>
-                    </div>
-
-                    <div v-for="success in successMessages" :key="success">
-                      <v-alert type="success" outlined>{{ success }}</v-alert>
                     </div>
                   </div>
                   <v-btn text @click="resetStepper"> Start Over </v-btn>
@@ -124,6 +124,10 @@ export default {
       if (!validation.errors.includes(ErrorType.Memory)) {
         const memoryUsage = parseFloat((validation.memoryUsage * 100).toFixed(2));
         this.successMessages.push(`Used ${memoryUsage}% of the available memory (using ${validation.commandCount} out of 3500 allowed commands)`);
+      }
+
+      if(validation.commandCount > 681) {
+        this.warningMessages.push('This light show will be limited on vehicle software versions less than 2022.44.25');
       }
 
       if (validation.errors > 0) {
