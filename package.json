@@ -12,31 +12,31 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@xsor/tlsv": "0.4.0"
+    "@xsor/tlsv": "1.0.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "5.0.8",
-    "@vue/cli-plugin-eslint": "5.0.8",
-    "@vue/cli-service": "5.0.8",
-    "@vue/eslint-config-prettier": "7.1.0",
+    "@vue/cli-plugin-babel": "5.0.9",
+    "@vue/cli-plugin-eslint": "5.0.9",
+    "@vue/cli-service": "5.0.9",
+    "@vue/eslint-config-prettier": "9.0.0",
     "babel-eslint": "10.1.0",
-    "core-js": "3.31.0",
-    "eslint": "8.44.0",
-    "eslint-plugin-prettier": "4.2.1",
-    "eslint-plugin-vue": "9.15.1",
-    "lint-staged": "13.2.3",
-    "prettier": "2.8.8",
-    "sass": "1.63.6",
-    "sass-loader": "10.4.1",
-    "vue": "2.7.14",
+    "core-js": "3.48.0",
+    "eslint": "8.57.1",
+    "eslint-plugin-prettier": "4.2.5",
+    "eslint-plugin-vue": "9.33.0",
+    "lint-staged": "13.3.0",
+    "prettier": "3.8.1",
+    "sass": "1.97.3",
+    "sass-loader": "10.5.2",
+    "vue": "2.7.16",
     "vue-cli-plugin-vuetify": "2.5.8",
-    "vue-template-compiler": "2.7.14",
-    "vuetify": "2.6.15",
+    "vue-template-compiler": "2.7.16",
+    "vuetify": "2.7.2",
     "vuetify-loader": "1.9.2"
   },
   "_id": "tesla-light-show-validator@1.0.0",
   "engines": {
-    "node": "16.x"
+    "node": "22.x"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
